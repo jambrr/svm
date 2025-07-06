@@ -1,0 +1,68 @@
+# SVM from scratch
+import numpy as np
+
+class SVM:
+    def __init__(self, lr=1e-3, lambda_param=1e-2, n_iters=1000):
+        self.lr = lr 
+        self.lambda_param = lambda_param
+        self.n_iters = n_iters
+        self.x = None
+        self.b = None
+
+    def _init_weights_bias(self, X):
+        n_features = X.shape[1]
+        self.w = np.zeros(n_features)
+        self.b = 0
+
+    def _get_cls_map(self, y):
+        # if y = 0 then map to -1
+        return np.where(y <= 0, -1, 1)
+    
+    def _satisfy_constraint(self, x, idx):
+        linear_model = np.dot(x, self.w) + self.b
+        return self.cls_map[idx] * linear_model >= 1
+
+    def _get_gradients(self, contrain, x, idx):
+
+        # If data point is correct
+        if contrain:
+            dw = self.lambda_param * self.w
+            db = 0
+            return dw, db
+
+        # If data point is wrong
+        dw = self.lambda_param * self.w - np.dot(self.cls_map[idx], x)
+        db = - self.cls_map[idx]
+        return dw, db
+
+    def _update_weights_bias(self, dw, db):
+        self.w -= self.lr * dw
+        self.b -= self.lr * db
+
+    def fit(self, X, y):
+        # Init weights and biases
+        self._init_weights_bias(X)
+
+        # Map binary class to {-1, 1}
+        self.cls_map = self._get_cls_map(y)
+
+        for e in range(self.n_iters):
+            print(f"Training epoch: {e}")
+            for idx, x in enumerate(X):
+                # Check if data point satisfies the constraint
+                contrain = self._satisfy_constraint(x, idx)
+
+                # Compute the gradients
+                dw, db = self._get_gradients(contrain, x, idx)
+
+                # Update the weights & biases
+                self._update_weights_bias(dw, db)
+
+    def predict(self, X):
+        estimate = np.dot(X, self.w) + self.b
+
+        prediction = np.sign(estimate)
+
+        # Map class from {-1, 1} to the original values 
+        return np.where(prediction == -1, 0, 1)
+
