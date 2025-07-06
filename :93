@@ -91,12 +91,6 @@ class SVM:
                 self._update_weights_bias(dw, db)
 
     def predict(self, X):
-        """
-
-        Predicts the class for X, using the trained weights and biases
-
-        """
-
         estimate = np.dot(X, self.w) + self.b
 
         prediction = np.sign(estimate)
